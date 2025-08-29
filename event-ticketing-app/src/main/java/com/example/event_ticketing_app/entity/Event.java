@@ -220,6 +220,10 @@ public class Event {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
+   // ADD THIS LINE - The magic for optimistic locking!
+    @Version
+    private Long version;
+
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();

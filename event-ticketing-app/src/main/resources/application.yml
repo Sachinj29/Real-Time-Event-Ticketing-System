@@ -53,8 +53,8 @@ spring:
   mail:
     host: smtp.gmail.com
     port: 587
-    username: eventticketing123@gmail.com
-    password: SamratMaliZindabad
+    username: eventticketing123@gmail.com  # Replace with your Gmail
+    password: vpptrdsoepklkhwq     # Use Gmail App Password
     properties:
       mail:
         smtp:

@@ -4,151 +4,194 @@
     <title>Event Ticketing - Payment Test</title>
     <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
     <style>
-        body { font-family: Arial, sans-serif; padding: 20px; }
-        button { padding: 10px 20px; font-size: 16px; cursor: pointer; }
-        .container { max-width: 600px; margin: 0 auto; }
-        .form-group { margin: 10px 0; }
-        input, select { padding: 8px; width: 300px; }
+        body { font-family: Arial, sans-serif; padding: 20px; max-width: 600px; margin: 0 auto; }
+        .form-group { margin: 15px 0; }
+        input, button { padding: 10px; font-size: 16px; }
+        input { width: 300px; }
+        button { background: #3498db; color: white; border: none; cursor: pointer; border-radius: 5px; }
+        button:hover { background: #2980b9; }
+        .status { margin-top: 20px; padding: 15px; border-radius: 5px; display: none; }
+        .success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .warning { background: #fff3cd; color: #856404; border: 1px solid #ffeaa7; }
     </style>
 </head>
 <body>
-<div class="container">
-    <h1>🎫 Event Ticketing - Payment Test</h1>
+<h1>🎫 Event Ticketing - Payment Test</h1>
 
-    <div class="form-group">
-        <label>Event ID:</label>
-        <input type="text" id="eventId" placeholder="Enter Event ID">
-    </div>
+<div class="form-group">
+    <label>Event ID:</label>
+    <input type="text" id="eventId" value="a9f5304c-d83b-4356-8250-0ee65aefe63e">
+</div>
 
-    <div class="form-group">
-        <label>User ID:</label>
-        <input type="text" id="userId" placeholder="Enter User ID">
-    </div>
+<div class="form-group">
+    <label>User ID:</label>
+    <input type="text" id="userId" value="013cd6ea-4c7d-4ed3-904e-b029f52dd6a6">
+</div>
 
-    <div class="form-group">
-        <label>Tickets:</label>
-        <input type="number" id="ticketsCount" value="2" min="1">
-    </div>
+<div class="form-group">
+    <label>Tickets:</label>
+    <input type="number" id="ticketsCount" value="2" min="1">
+</div>
 
-    <button onclick="createBookingAndPay()" style="background: #3498db; color: white; border: none;">
-        🛒 Create Booking & Pay
-    </button>
+<button onclick="createBookingAndPay()">🛒 Create Booking & Pay</button>
 
-    <div id="status" style="margin-top: 20px; padding: 10px; display: none;"></div>
+<div id="status" class="status"></div>
+
+<div style="margin-top: 30px; padding: 15px; background: #f8f9fa; border-radius: 5px;">
+    <h3>📝 How to Test Payment:</h3>
+    <ol>
+        <li>Click "Create Booking & Pay" button</li>
+        <li>Razorpay popup will open with payment form</li>
+        <li>Use these test card details:</li>
+        <ul>
+            <li><strong>Card Number:</strong> 4111 1111 1111 1111</li>
+            <li><strong>Expiry:</strong> Any future date (e.g., 12/25)</li>
+            <li><strong>CVV:</strong> Any 3 digits (e.g., 123)</li>
+            <li><strong>Name:</strong> Any name</li>
+        </ul>
+        <li>Complete payment to test the flow</li>
+    </ol>
 </div>
 
 <script>
     async function createBookingAndPay() {
-        const statusDiv = document.getElementById('status');
-        const eventId = document.getElementById('eventId').value;
-        const userId = document.getElementById('userId').value;
-        const ticketsCount = parseInt(document.getElementById('ticketsCount').value);
+    const statusDiv = document.getElementById('status');
+    const eventId = document.getElementById('eventId').value;
+    const userId = document.getElementById('userId').value;
+    const ticketsCount = parseInt(document.getElementById('ticketsCount').value);
 
-        if (!eventId || !userId) {
-            alert('Please fill in Event ID and User ID');
-            return;
+    if (!eventId || !userId) {
+        showStatus('Please fill in Event ID and User ID', 'error');
+        return;
+    }
+
+    try {
+        showStatus('⏳ Creating booking...', 'warning');
+
+        // Step 1: Create booking
+        const bookingResponse = await fetch('/api/bookings', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                eventId: eventId,
+                userId: userId,
+                ticketsCount: ticketsCount
+            })
+        });
+
+        console.log('Booking Response Status:', bookingResponse.status);
+        console.log('Booking Response Headers:', bookingResponse.headers);
+
+        if (!bookingResponse.ok) {
+            const errorText = await bookingResponse.text();
+            console.log('Booking Error Response:', errorText);
+            throw new Error(`Booking failed: ${errorText}`);
         }
 
-        try {
-            statusDiv.style.display = 'block';
-            statusDiv.innerHTML = '⏳ Creating booking...';
-            statusDiv.style.background = '#f39c12';
+        const bookingResult = await bookingResponse.json();
+        console.log('Booking Result:', bookingResult);
 
-            // Step 1: Create booking
-            const bookingResponse = await fetch('/api/bookings', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    eventId: eventId,
-                    userId: userId,
-                    ticketsCount: ticketsCount
-                })
-            });
+        // Check if booking has the expected structure
+        if (!bookingResult || !bookingResult.id) {
+            throw new Error('Invalid booking response: missing booking ID');
+        }
 
-            const bookingResult = await bookingResponse.json();
+        showStatus('💳 Creating payment order...', 'warning');
 
-            if (!bookingResult.success) {
-                throw new Error(bookingResult.error || 'Booking creation failed');
-            }
+        // Step 2: Create payment order (using the correct booking ID)
+        const paymentResponse = await fetch(`/api/payments/create-order/${bookingResult.id}`, {
+            method: 'POST'
+        });
 
-            statusDiv.innerHTML = '💳 Creating payment order...';
+        if (!paymentResponse.ok) {
+            const errorText = await paymentResponse.text();
+            throw new Error(`Payment order creation failed: ${errorText}`);
+        }
 
-            // Step 2: Create payment order
-            const paymentResponse = await fetch(`/api/payments/create-order/${bookingResult.booking.id}`, {
-                method: 'POST'
-            });
+        const paymentResult = await paymentResponse.json();
+        console.log('Payment Result:', paymentResult);
 
-            const paymentResult = await paymentResponse.json();
+        if (!paymentResult.success || !paymentResult.paymentOrder) {
+            throw new Error('Invalid payment order response');
+        }
 
-            if (!paymentResult.success) {
-                throw new Error('Payment order creation failed');
-            }
+        showStatus('🔐 Opening Razorpay checkout...', 'warning');
 
-            statusDiv.innerHTML = '🔐 Opening Razorpay checkout...';
+        // Step 3: Open Razorpay checkout
+        const options = {
+            key: paymentResult.paymentOrder.keyId,
+            amount: paymentResult.paymentOrder.amount * 100,
+            currency: paymentResult.paymentOrder.currency,
+            order_id: paymentResult.paymentOrder.orderId,
+            name: 'Event Ticketing Platform',
+            description: `${ticketsCount} Event Tickets`,
+            handler: async function(response) {
+                showStatus('✅ Verifying payment...', 'warning');
 
-            // Step 3: Open Razorpay checkout
-            const options = {
-                key: paymentResult.paymentOrder.keyId,
-                amount: paymentResult.paymentOrder.amount * 100, // Amount in paisa
-                currency: paymentResult.paymentOrder.currency,
-                order_id: paymentResult.paymentOrder.orderId,
-                name: 'Event Ticketing Platform',
-                description: `${ticketsCount} Event Tickets`,
-                image: 'https://cdn-icons-png.flaticon.com/512/3135/3135715.png',
-                handler: async function(response) {
-                    statusDiv.innerHTML = '✅ Verifying payment...';
+                try {
+                    const verifyResponse = await fetch('/api/payments/verify', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            razorpay_payment_id: response.razorpay_payment_id,
+                            razorpay_order_id: response.razorpay_order_id,
+                            razorpay_signature: response.razorpay_signature,
+                            booking_id: bookingResult.id
+                        })
+                    });
 
-                    // Step 4: Verify payment
-                    try {
-                        const verifyResponse = await fetch('/api/payments/verify', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({
-                                razorpay_payment_id: response.razorpay_payment_id,
-                                razorpay_order_id: response.razorpay_order_id,
-                                razorpay_signature: response.razorpay_signature,
-                                booking_id: bookingResult.booking.id
-                            })
-                        });
+                    const verifyResult = await verifyResponse.json();
 
-                        const verifyResult = await verifyResponse.json();
-
-                        if (verifyResult.success) {
-                            statusDiv.innerHTML = '🎉 Payment successful! Booking confirmed. Check your email for confirmation.';
-                            statusDiv.style.background = '#27ae60';
-                            statusDiv.style.color = 'white';
-                        } else {
-                            statusDiv.innerHTML = '❌ Payment verification failed';
-                            statusDiv.style.background = '#e74c3c';
-                            statusDiv.style.color = 'white';
-                        }
-                    } catch (error) {
-                        statusDiv.innerHTML = '❌ Payment verification error: ' + error.message;
-                        statusDiv.style.background = '#e74c3c';
-                        statusDiv.style.color = 'white';
+                    if (verifyResult.success) {
+                        showStatus('🎉 Payment successful! Booking confirmed!', 'success');
+                    } else {
+                        showStatus('❌ Payment verification failed', 'error');
                     }
-                },
-                prefill: {
-                    name: 'Test User',
-                    email: 'test@example.com',
-                    contact: '9999999999'
-                },
-                notes: {
-                    booking_id: bookingResult.booking.id
-                },
-                theme: {
-                    color: '#3498db'
+                } catch (error) {
+                    showStatus('❌ Payment verification error: ' + error.message, 'error');
                 }
-            };
+            },
+            prefill: {
+                name: 'Test User',
+                email: 'test@example.com',
+                contact: '9999999999'
+            },
+            notes: {
+                booking_id: bookingResult.id
+            },
+            theme: {
+                color: '#3498db'
+            },
+            modal: {
+                ondismiss: function(){
+                    showStatus('❌ Payment cancelled by user', 'error');
+                }
+            }
+        };
 
-            const rzp = new Razorpay(options);
-            rzp.open();
+        const rzp = new Razorpay(options);
+        rzp.open();
 
-        } catch (error) {
-            statusDiv.innerHTML = '❌ Error: ' + error.message;
-            statusDiv.style.background = '#e74c3c';
-            statusDiv.style.color = 'white';
-        }
+    } catch (error) {
+        showStatus('❌ Error: ' + error.message, 'error');
+        console.error('Full error:', error);
+    }
+}
+
+function showStatus(message, type) {
+    const statusDiv = document.getElementById('status');
+    statusDiv.className = `status ${type}`;
+    statusDiv.innerHTML = message;
+    statusDiv.style.display = 'block';
+}
+
+
+    function showStatus(message, type) {
+        const statusDiv = document.getElementById('status');
+        statusDiv.className = `status ${type}`;
+        statusDiv.innerHTML = message;
+        statusDiv.style.display = 'block';
     }
 </script>
 </body>
