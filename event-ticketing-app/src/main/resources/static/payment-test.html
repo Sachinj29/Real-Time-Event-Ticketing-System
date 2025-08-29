@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Event Ticketing - Payment Test</title>
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        button { padding: 10px 20px; font-size: 16px; cursor: pointer; }
+        .container { max-width: 600px; margin: 0 auto; }
+        .form-group { margin: 10px 0; }
+        input, select { padding: 8px; width: 300px; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>🎫 Event Ticketing - Payment Test</h1>
+
+    <div class="form-group">
+        <label>Event ID:</label>
+        <input type="text" id="eventId" placeholder="Enter Event ID">
+    </div>
+
+    <div class="form-group">
+        <label>User ID:</label>
+        <input type="text" id="userId" placeholder="Enter User ID">
+    </div>
+
+    <div class="form-group">
+        <label>Tickets:</label>
+        <input type="number" id="ticketsCount" value="2" min="1">
+    </div>
+
+    <button onclick="createBookingAndPay()" style="background: #3498db; color: white; border: none;">
+        🛒 Create Booking & Pay
+    </button>
+
+    <div id="status" style="margin-top: 20px; padding: 10px; display: none;"></div>
+</div>
+
+<script>
+    async function createBookingAndPay() {
+        const statusDiv = document.getElementById('status');
+        const eventId = document.getElementById('eventId').value;
+        const userId = document.getElementById('userId').value;
+        const ticketsCount = parseInt(document.getElementById('ticketsCount').value);
+
+        if (!eventId || !userId) {
+            alert('Please fill in Event ID and User ID');
+            return;
+        }
+
+        try {
+            statusDiv.style.display = 'block';
+            statusDiv.innerHTML = '⏳ Creating booking...';
+            statusDiv.style.background = '#f39c12';
+
+            // Step 1: Create booking
+            const bookingResponse = await fetch('/api/bookings', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    eventId: eventId,
+                    userId: userId,
+                    ticketsCount: ticketsCount
+                })
+            });
+
+            const bookingResult = await bookingResponse.json();
+
+            if (!bookingResult.success) {
+                throw new Error(bookingResult.error || 'Booking creation failed');
+            }
+
+            statusDiv.innerHTML = '💳 Creating payment order...';
+
+            // Step 2: Create payment order
+            const paymentResponse = await fetch(`/api/payments/create-order/${bookingResult.booking.id}`, {
+                method: 'POST'
+            });
+
+            const paymentResult = await paymentResponse.json();
+
+            if (!paymentResult.success) {
+                throw new Error('Payment order creation failed');
+            }
+
+            statusDiv.innerHTML = '🔐 Opening Razorpay checkout...';
+
+            // Step 3: Open Razorpay checkout
+            const options = {
+                key: paymentResult.paymentOrder.keyId,
+                amount: paymentResult.paymentOrder.amount * 100, // Amount in paisa
+                currency: paymentResult.paymentOrder.currency,
+                order_id: paymentResult.paymentOrder.orderId,
+                name: 'Event Ticketing Platform',
+                description: `${ticketsCount} Event Tickets`,
+                image: 'https://cdn-icons-png.flaticon.com/512/3135/3135715.png',
+                handler: async function(response) {
+                    statusDiv.innerHTML = '✅ Verifying payment...';
+
+                    // Step 4: Verify payment
+                    try {
+                        const verifyResponse = await fetch('/api/payments/verify', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                razorpay_payment_id: response.razorpay_payment_id,
+                                razorpay_order_id: response.razorpay_order_id,
+                                razorpay_signature: response.razorpay_signature,
+                                booking_id: bookingResult.booking.id
+                            })
+                        });
+
+                        const verifyResult = await verifyResponse.json();
+
+                        if (verifyResult.success) {
+                            statusDiv.innerHTML = '🎉 Payment successful! Booking confirmed. Check your email for confirmation.';
+                            statusDiv.style.background = '#27ae60';
+                            statusDiv.style.color = 'white';
+                        } else {
+                            statusDiv.innerHTML = '❌ Payment verification failed';
+                            statusDiv.style.background = '#e74c3c';
+                            statusDiv.style.color = 'white';
+                        }
+                    } catch (error) {
+                        statusDiv.innerHTML = '❌ Payment verification error: ' + error.message;
+                        statusDiv.style.background = '#e74c3c';
+                        statusDiv.style.color = 'white';
+                    }
+                },
+                prefill: {
+                    name: 'Test User',
+                    email: 'test@example.com',
+                    contact: '9999999999'
+                },
+                notes: {
+                    booking_id: bookingResult.booking.id
+                },
+                theme: {
+                    color: '#3498db'
+                }
+            };
+
+            const rzp = new Razorpay(options);
+            rzp.open();
+
+        } catch (error) {
+            statusDiv.innerHTML = '❌ Error: ' + error.message;
+            statusDiv.style.background = '#e74c3c';
+            statusDiv.style.color = 'white';
+        }
+    }
+</script>
+</body>
+</html>

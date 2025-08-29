@@ -1,0 +1,97 @@
+spring:
+  jackson:
+    serialization:
+      write-dates-as-timestamps: false
+    deserialization:
+      fail-on-unknown-properties: false
+
+  application:
+    name: event-ticketing-backend
+
+  # PostgreSQL (Supabase) - Main Database
+  datasource:
+    url: jdbc:postgresql://aws-1-ap-south-1.pooler.supabase.com:5432/postgres?sslmode=require
+    username: postgres.iyedxkmjjedbwpnyyuti
+    password: SuplaShot@2917  # Replace with your real password
+    driver-class-name: org.postgresql.Driver
+
+  hikari:
+    maximum-pool-size: 10
+    minimum-idle: 2
+    max-lifetime: 1800000
+    connection-timeout: 60000
+    idle-timeout: 600000
+    connection-test-query: "SELECT 1"
+
+  # JPA Configuration
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+    show-sql: true
+
+
+  data:
+    redis:
+      url: redis://default:tFZ32bnxzXCyKK5sK12AMSRt73QR6DvB@13.201.62.39:13273
+      timeout: 30s
+      repositories:
+        enabled: false
+
+
+
+  # RabbitMQ (CloudAMQP) - Message Queue
+  rabbitmq:
+    addresses: amqps://waojqstw:Zgd9WeWsqmmow5mYj6Djexf5um3-AEJQ@puffin.rmq2.cloudamqp.com/waojqstw
+    connection-timeout: 60000ms
+    requested-heartbeat: 60s
+
+  # Email Configuration (we'll add Gmail SMTP later)
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: eventticketing123@gmail.com
+    password: SamratMaliZindabad
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+
+# Server Configuration
+server:
+  port: 8081
+
+# JWT Configuration (for authentication)
+jwt:
+  secret: 404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970
+  expiration: 86400000 # 24 hours
+
+# Logging
+logging:
+  level:
+    com.eventtickets: DEBUG
+    org.springframework.security: DEBUG
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
+
+
+google:
+  maps:
+    api-key: AIzaSyCCXbyYWEvZgd8Lm4K5ozLORVMyql3nhTI
+
+
+razorpay:
+  key-id: rzp_test_RB9ZO1ivjNgUO7
+  key-secret: 3SSUEMaKc1MuJ5LKORy4Wga4
+  #webhook-secret: YOUR_WEBHOOK_SECRET # We'll generate this later
+
+
+cache:
+  ttl:
+    events: 3600  # 1 hour in seconds
+    users: 1800   # 30 minutes in seconds
