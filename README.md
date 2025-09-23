@@ -31,9 +31,9 @@ A **full-stack event ticketing platform** built with **Spring Boot (backend)** a
 ### Backend
 - **Framework**: Spring Boot 3.x (Java 21)  
 - **Security**: Spring Security + JWT  
-- **Database**: SQLite (dev) / PostgreSQL (prod)  
+- **Database**: PostgreSQL (prod)  
 - **OAuth2**: Google OAuth2 integration  
-- **Docs**: Swagger / OpenAPI  
+- **Docs**: Swagger
 - **Build Tool**: Maven  
 
 ### Frontend
@@ -47,7 +47,7 @@ A **full-stack event ticketing platform** built with **Spring Boot (backend)** a
 ### DevOps & Deployment
 - **Containerization**: Docker  
 - **Backend Hosting**: Render.com  
-- **Frontend Hosting**: Vercel / Netlify  
+- **Frontend Hosting**: Vercel 
 - **Version Control**: Git & GitHub  
 
 ---
