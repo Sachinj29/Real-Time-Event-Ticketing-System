@@ -10,9 +10,9 @@ spring:
 
   # PostgreSQL (Supabase) - Main Database
   datasource:
-    url: jdbc:postgresql://aws-1-ap-south-1.pooler.supabase.com:5432/postgres?sslmode=require
-    username: postgres.iyedxkmjjedbwpnyyuti
-    password: SuplaShot@2917  # Replace with your real password
+    url: URL            # Replace with your real Url
+    username: USERNAME  # Replace with your real Username
+    password: PASSWORD  # Replace with your real password
     driver-class-name: org.postgresql.Driver
 
   hikari:
@@ -36,7 +36,7 @@ spring:
 
   data:
     redis:
-      url: redis://default:tFZ32bnxzXCyKK5sK12AMSRt73QR6DvB@13.201.62.39:13273
+      url: URL                                # Replace with your real Url
       timeout: 30s
       repositories:
         enabled: false
@@ -45,7 +45,7 @@ spring:
 
   # RabbitMQ (CloudAMQP) - Message Queue
   rabbitmq:
-    addresses: amqps://waojqstw:Zgd9WeWsqmmow5mYj6Djexf5um3-AEJQ@puffin.rmq2.cloudamqp.com/waojqstw
+    addresses: URL                               # Replace with your real Url
     connection-timeout: 60000ms
     requested-heartbeat: 60s
 
@@ -53,8 +53,8 @@ spring:
   mail:
     host: smtp.gmail.com
     port: 587
-    username: eventticketing123@gmail.com  # Replace with your Gmail
-    password: vpptrdsoepklkhwq     # Use Gmail App Password
+    username: abc@gmail.com                         # Replace with your Gmail
+    password: Unique 16 digit Gmail App Password    # Use Gmail App Password
     properties:
       mail:
         smtp:
@@ -82,12 +82,12 @@ logging:
 
 google:
   maps:
-    api-key: AIzaSyCCXbyYWEvZgd8Lm4K5ozLORVMyql3nhTI
+    api-key: xxxxxxxxxxxx      # Replace with your real Google Api-Key
 
 
 razorpay:
-  key-id: rzp_test_RB9ZO1ivjNgUO7
-  key-secret: 3SSUEMaKc1MuJ5LKORy4Wga4
+  key-id: KEY-ID                   # Replace with your real Kei -id
+  key-secret: XXXXXXXX             # Replace with your real Key-Secret
   #webhook-secret: YOUR_WEBHOOK_SECRET # We'll generate this later
 
 
