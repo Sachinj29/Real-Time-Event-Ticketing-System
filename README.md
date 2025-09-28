@@ -19,7 +19,7 @@ A **full-stack event ticketing platform** built with **Spring Boot (backend)** a
 - 👥 **Role-Based Access Control**: Participant, Organizer, Admin  
 - 🎪 **Event Management**: Create, edit, and manage events with venue integration  
 - 🎫 **Booking System**: Secure booking with seat & capacity management  
-- 💳 **Payment Ready**: Easily integrable with gateways (Stripe, Razorpay, PayPal, etc.)  
+- 💳 **Payment Ready**: Easily integrable with gateways (Stripe)  
 - 📱 **Responsive Design**: Mobile-friendly React frontend  
 - 🐳 **Docker Ready**: Containerized for deployment  
 - ☁️ **Cloud Hosted**: Backend deployed on **Render.com**  
